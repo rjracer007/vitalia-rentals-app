@@ -26,7 +26,6 @@ Desarrollar la estructura base (End-to-End) de la aplicación, implementando el 
    * Creación de nuevos vehículos (POST).
    * Visualización en tiempo real del inventario actual (GET).
    * Eliminación segura de vehículos con alerta de confirmación (DELETE).
-4. **Manejo de Errores UX:** Imágenes de respaldo (fallback) en caso de URLs rotas y alertas en pantalla para las peticiones HTTP.
 
 ---
 
