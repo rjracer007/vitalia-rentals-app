@@ -7,6 +7,7 @@ import Admin from './pages/Admin';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AdminCategories from './pages/AdminCategories';
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
         <main className="container pt-5 mt-4 flex-grow-1">
           {/* El componente Routes decide qué mostrar según la URL */}
           <Routes>
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />

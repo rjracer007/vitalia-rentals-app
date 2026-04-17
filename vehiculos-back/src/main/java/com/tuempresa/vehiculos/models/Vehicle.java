@@ -23,6 +23,10 @@ public class Vehicle {
     @Column(nullable = false)
     private String imageUrl;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
+
     // Constructores vacíos exigidos por JPA
     public Vehicle() {
     }
@@ -35,6 +39,15 @@ public class Vehicle {
     }
 
     // Getters y Setters
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
     public Long getId() {
         return id;
     }
