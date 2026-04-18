@@ -6,10 +6,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+
+import com.tuempresa.vehiculos.security.JwtRequestFilter;
+
 import static org.springframework.security.config.Customizer.withDefaults;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Configuration
 public class SecurityConfig {
+
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter; // ¡NUEVO!
 
     // Este Bean nos permite usar BCrypt en cualquier parte de la aplicación
     @Bean
@@ -21,13 +29,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(withDefaults()) // Permite conexiones desde React
-                .csrf(csrf -> csrf.disable()) // Desactivamos CSRF (necesario para APIs REST)
+                .cors(withDefaults())
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // Por ahora, permitimos todo públicamente para no romper lo que hicimos en el
-                        // Sprint 1
-                        .requestMatchers("/api/vehicles/**", "/api/categories/**", "/api/auth/**").permitAll()
+                        .requestMatchers("/api/vehicles/**", "/api/categories/**", "/api/auth/**", "/error",
+                                "/api/reservations/**", "/api/reviews/**")
+                        .permitAll()
                         .anyRequest().authenticated());
+
+        // ¡NUEVO! Ponemos nuestro filtro personalizado antes del filtro estándar de
+        // Spring
+        http.addFilterBefore(jwtRequestFilter,
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }

@@ -28,4 +28,15 @@ public class CategoryController {
         Category savedCategory = categoryRepository.save(category);
         return ResponseEntity.ok(savedCategory);
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteCategory(@PathVariable Long id) {
+        // Verificamos si la categoría existe antes de intentar borrarla
+        if (categoryRepository.existsById(id)) {
+            categoryRepository.deleteById(id);
+            return ResponseEntity.ok("Categoría eliminada exitosamente.");
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

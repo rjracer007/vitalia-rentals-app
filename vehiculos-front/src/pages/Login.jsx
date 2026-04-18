@@ -32,6 +32,7 @@ const Login = () => {
                 // Guardamos el token y el nombre en el "Almacenamiento Local" del navegador
                 localStorage.setItem('jwt', data.token);
                 localStorage.setItem('userName', data.name);
+                localStorage.setItem('userId', data.userId);
 
                 // Redirigimos al usuario al Home y recargamos para que el Header se actualice
                 window.location.href = '/';

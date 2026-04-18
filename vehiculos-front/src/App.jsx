@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminCategories from './pages/AdminCategories';
+import VehicleDetail from './pages/VehicleDetail';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/vehicle/:id" element={<VehicleDetail />} />
           </Routes>
         </main>
 

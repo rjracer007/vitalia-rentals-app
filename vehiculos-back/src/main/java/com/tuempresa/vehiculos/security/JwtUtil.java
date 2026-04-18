@@ -28,4 +28,19 @@ public class JwtUtil {
                 .signWith(key) // Firmado con nuestra llave secreta
                 .compact();
     }
+
+    // ¡NUEVO! Extraer el correo (usuario) de la pulsera
+    public String extractUsername(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
+    }
+
+    // ¡NUEVO! Validar que la pulsera sea auténtica y no haya expirado
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

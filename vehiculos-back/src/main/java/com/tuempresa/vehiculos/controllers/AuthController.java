@@ -54,11 +54,13 @@ public class AuthController {
             // 3. Generamos el Token JWT
             String token = jwtUtil.generateToken(userOptional.get().getEmail());
 
-            // 4. Se lo enviamos al Frontend junto con el nombre del usuario
-            Map<String, String> response = new HashMap<>();
+            // 4. Se lo enviamos al Frontend junto con el nombre y el ID
+            Map<String, Object> response = new HashMap<>(); // Cambiamos String, String por String, Object para aceptar
+                                                            // Longs
             response.put("token", token);
             response.put("message", "Login exitoso");
-            response.put("name", userOptional.get().getFirstName() + " " + userOptional.get().getLastName()); // ¡NUEVO!
+            response.put("name", userOptional.get().getFirstName() + " " + userOptional.get().getLastName());
+            response.put("userId", userOptional.get().getId()); // ¡NUEVO! Le enviamos el ID a React
 
             return ResponseEntity.ok(response);
         }

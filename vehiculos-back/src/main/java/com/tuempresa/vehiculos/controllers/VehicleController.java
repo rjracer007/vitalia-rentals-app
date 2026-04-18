@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -42,5 +43,32 @@ public class VehicleController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // ¡NUEVO! Endpoint para el buscador con fechas
+    @GetMapping("/search")
+    public ResponseEntity<List<Vehicle>> searchVehicles(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestParam(required = false) String keyword) {
+
+        // Convertimos el texto ("2024-12-01") a formato Fecha de Java
+        LocalDate start = LocalDate.parse(startDate);
+        LocalDate end = LocalDate.parse(endDate);
+
+        // Si el keyword viene vacío en lugar de nulo, lo limpiamos
+        String searchKeyword = (keyword != null && !keyword.trim().isEmpty()) ? keyword.trim() : "";
+        // Llamamos a nuestra super consulta
+        List<Vehicle> availableVehicles = vehicleRepository.findAvailableVehicles(start, end, searchKeyword);
+
+        return ResponseEntity.ok(availableVehicles);
+    }
+
+    // Endpoint para obtener un solo vehículo por su ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Vehicle> getVehicleById(@PathVariable Long id) {
+        return vehicleRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

@@ -1,6 +1,8 @@
 package com.tuempresa.vehiculos.models;
 
 import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -23,6 +25,14 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    // ¡NUEVO! Relación Muchos a Muchos para los Favoritos
+    @ManyToMany
+    @JoinTable(name = "user_favorites", // Nombre de la tabla intermedia que creará Postgres
+            joinColumns = @JoinColumn(name = "user_id"), // Llave del usuario
+            inverseJoinColumns = @JoinColumn(name = "vehicle_id") // Llave del vehículo
+    )
+    private Set<Vehicle> favoriteVehicles = new HashSet<>();
+
     // Constructores
     public User() {
     }
@@ -32,6 +42,14 @@ public class User {
         this.lastName = lastName;
         this.email = email;
         this.password = password;
+    }
+
+    public Set<Vehicle> getFavoriteVehicles() {
+        return favoriteVehicles;
+    }
+
+    public void setFavoriteVehicles(Set<Vehicle> favoriteVehicles) {
+        this.favoriteVehicles = favoriteVehicles;
     }
 
     // Getters y Setters
