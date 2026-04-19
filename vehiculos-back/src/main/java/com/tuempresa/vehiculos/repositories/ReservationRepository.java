@@ -11,4 +11,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     // Método mágico de Spring Data para buscar todas las reservas de un auto
     // específico
     List<Reservation> findByVehicleId(Long vehicleId);
+
+    List<Reservation> findByUserId(Long userId);
 }

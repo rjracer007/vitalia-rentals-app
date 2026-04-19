@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { parseISO, eachDayOfInterval } from 'date-fns';
 import es from 'date-fns/locale/es';
+import { useParams, Link, useNavigate } from 'react-router-dom'; // Agregamos useNavigate
 
 registerLocale('es', es);
 
@@ -23,6 +23,10 @@ const VehicleDetail = () => {
     // Leemos si hay un usuario logueado
     const userId = localStorage.getItem('userId');
     const token = localStorage.getItem('jwt');
+
+    const navigate = useNavigate(); // ¡NUEVO! Hook para navegar
+    const [dateRange, setDateRange] = useState([null, null]); // ¡NUEVO! Estado para el rango de fechas
+    const [startDate, endDate] = dateRange;
 
     useEffect(() => {
         const fetchDatos = async () => {
@@ -225,15 +229,63 @@ const VehicleDetail = () => {
 
                 </div>
 
-                {/* Columna Derecha: Calendario */}
+                {/* Columna Derecha: Calendario Interactivo */}
                 <div className="col-lg-5">
                     <div className="card border-0 shadow-sm p-4 sticky-top" style={{ top: '100px' }}>
                         <h4 className="fw-bold mb-1">Disponibilidad</h4>
-                        <p className="small text-muted mb-4">Revisa las fechas en las que este vehículo ya está reservado.</p>
+                        <p className="small text-muted mb-4">Selecciona las fechas de tu viaje.</p>
+
                         <div className="d-flex justify-content-center">
-                            <DatePicker inline locale="es" minDate={new Date()} excludeDates={blockedDates} monthsShown={2} />
+                            {/* ¡NUEVO! Calendario configurado para seleccionar rangos */}
+                            <DatePicker
+                                inline
+                                locale="es"
+                                minDate={new Date()}
+                                excludeDates={blockedDates}
+                                monthsShown={2}
+                                selectsRange={true}
+                                startDate={startDate}
+                                endDate={endDate}
+                                onChange={(update) => setDateRange(update)}
+                                dateFormat="yyyy/MM/dd"
+                            />
                         </div>
-                        <button className="btn w-100 fw-bold mt-4 py-2" style={{ backgroundColor: '#e3b155', color: '#fff' }}>
+
+                        <div className="mt-4 border-top pt-3 text-center">
+                            <span className="badge bg-danger me-2"> </span> Ocupadas
+                            <span className="badge border bg-light text-dark ms-3 me-2"> </span> Disponibles
+                            <span className="badge text-dark ms-3 me-2" style={{ backgroundColor: '#e3b155' }}> </span> Tu Selección
+                        </div>
+
+                        {/* ¡NUEVO! Lógica del botón Iniciar Reserva */}
+                        <button
+                            className="btn w-100 fw-bold mt-4 py-2 shadow-sm"
+                            style={{ backgroundColor: '#e3b155', color: '#fff' }}
+                            onClick={() => {
+                                // 1. Validamos que haya elegido ambas fechas
+                                if (!startDate || !endDate) {
+                                    alert("Por favor, selecciona una fecha de recogida y una de devolución en el calendario.");
+                                    return;
+                                }
+
+                                // 2. Validamos si el usuario está logueado (US #30)
+                                if (!userId || !token) {
+                                    alert("Para realizar una reserva, necesitas iniciar sesión o crear una cuenta.");
+                                    navigate('/login');
+                                    return;
+                                }
+
+                                // 3. Si todo está bien, lo mandamos a la nueva página de Checkout (que crearemos en el paso 2)
+                                // Pasamos las fechas seleccionadas en la memoria de la ruta (state)
+                                navigate(`/checkout/${id}`, {
+                                    state: {
+                                        checkIn: startDate.toISOString(),
+                                        checkOut: endDate.toISOString(),
+                                        vehicleParams: vehicle
+                                    }
+                                });
+                            }}
+                        >
                             Iniciar Reserva
                         </button>
                     </div>

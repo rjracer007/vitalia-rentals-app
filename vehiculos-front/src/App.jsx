@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
+import WhatsAppButton from './components/common/WhatsAppButton';
 
 // Importamos las páginas
 import Admin from './pages/Admin';
@@ -9,6 +10,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminCategories from './pages/AdminCategories';
 import VehicleDetail from './pages/VehicleDetail';
+import Checkout from './pages/Checkout';
+import ReservationSuccess from './pages/ReservationSuccess';
+import MisReservas from './pages/MisReservas';
 
 function App() {
   return (
@@ -26,11 +30,16 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/vehicle/:id" element={<VehicleDetail />} />
+            <Route path="/checkout/:id" element={<Checkout />} />
+            <Route path="/reserva-exitosa" element={<ReservationSuccess />} />
+            <Route path="/mis-reservas" element={<MisReservas />} />
           </Routes>
         </main>
 
         <Footer />
+
       </div>
+      <WhatsAppButton />
     </Router>
   );
 }

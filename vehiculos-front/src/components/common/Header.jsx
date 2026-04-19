@@ -55,6 +55,12 @@ const Header = () => {
                                         <span className="small text-muted mb-0 lh-1">Hola,</span>
                                         <span className="fw-bold" style={{ color: '#e3b155' }}>{userName}</span>
                                     </div>
+
+                                    {/* ¡NUEVO BOTÓN! */}
+                                    <Link to="/mis-reservas" className="btn btn-outline-dark btn-sm rounded-pill px-3">
+                                        Mis Reservas
+                                    </Link>
+
                                     <button onClick={handleLogout} className="btn btn-sm btn-outline-danger fw-semibold">
                                         Cerrar sesión
                                     </button>
