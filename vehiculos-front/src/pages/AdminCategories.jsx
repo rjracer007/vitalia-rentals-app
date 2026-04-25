@@ -2,165 +2,201 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const AdminCategories = () => {
-    // 1. Estados
-    const [formData, setFormData] = useState({ title: '', description: '', imageUrl: '' });
+    // --- ESTADOS ---
     const [categories, setCategories] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState({ text: '', type: '' });
+    const [formData, setFormData] = useState({ title: '', description: '', imageUrl: '' });
+    const [editingCategoryId, setEditingCategoryId] = useState(null);
 
-    // ¡NUEVO! Estados para la ventana emergente (Modal) de eliminación
-    const [showModal, setShowModal] = useState(false);
-    const [categoryToDelete, setCategoryToDelete] = useState(null);
+    // ¡CRÍTICO! Necesitamos el token para poder crear/editar/borrar
+    const token = localStorage.getItem('jwt');
 
-    // 2. Peticiones (GET)
+    // --- CARGAR DATOS ---
     const fetchCategories = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/categories');
-            setCategories(await response.json());
-        } catch (error) { console.error('Error al cargar:', error); }
-    };
-
-    useEffect(() => { fetchCategories(); }, []);
-
-    // 3. Crear Categoría (POST)
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true); setMessage({ text: '', type: '' });
-
-        try {
-            const response = await fetch('http://localhost:8080/api/categories', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            });
-
-            if (response.ok) {
-                setMessage({ text: '¡Categoría creada!', type: 'success' });
-                setFormData({ title: '', description: '', imageUrl: '' });
-                fetchCategories();
-            } else {
-                setMessage({ text: 'Error al crear.', type: 'danger' });
-            }
-        } catch (error) { setMessage({ text: 'Error de conexión.', type: 'danger' }); }
-        finally { setLoading(false); }
-    };
-
-    // ¡NUEVO! 4. Lógica de Eliminación (DELETE)
-    // Esta función solo abre el modal y guarda qué categoría queremos borrar
-    const triggerDelete = (category) => {
-        setCategoryToDelete(category);
-        setShowModal(true);
-    };
-
-    // Esta función ejecuta el borrado real si el usuario presiona "Confirmar"
-    const confirmDelete = async () => {
-        try {
-            const response = await fetch(`http://localhost:8080/api/categories/${categoryToDelete.id}`, {
-                method: 'DELETE',
-            });
-
-            if (response.ok) {
-                setCategories(categories.filter(c => c.id !== categoryToDelete.id));
-                setMessage({ text: 'Categoría eliminada correctamente.', type: 'success' });
-            } else {
-                setMessage({ text: 'No se pudo eliminar la categoría.', type: 'danger' });
-            }
+            const res = await fetch('http://localhost:8080/api/categories');
+            if (res.ok) setCategories(await res.json());
         } catch (error) {
-            console.error(error);
-        } finally {
-            setShowModal(false); // Cerramos el modal
-            setCategoryToDelete(null); // Limpiamos el estado
+            console.error("Error cargando categorías", error);
         }
     };
 
+    useEffect(() => {
+        fetchCategories();
+    }, []);
+
+    // --- MANEJADORES DEL FORMULARIO ---
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleEditClick = (cat) => {
+        setEditingCategoryId(cat.id);
+        setFormData({
+            title: cat.title,
+            description: cat.description,
+            imageUrl: cat.imageUrl
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const cancelEdit = () => {
+        setEditingCategoryId(null);
+        setFormData({ title: '', description: '', imageUrl: '' });
+    };
+
+    // --- ACCIONES PRINCIPALES (CRUD) ---
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const url = editingCategoryId
+            ? `http://localhost:8080/api/categories/${editingCategoryId}`
+            : 'http://localhost:8080/api/categories';
+        const method = editingCategoryId ? 'PUT' : 'POST';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert(editingCategoryId ? '✅ Categoría actualizada exitosamente' : '✅ Categoría creada exitosamente');
+                cancelEdit();
+                fetchCategories();
+            } else {
+                alert(`❌ Error al guardar la categoría. Código: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error de conexión:', error);
+            alert('❌ Error crítico de conexión con el servidor.');
+        }
+    };
+
+    const handleDelete = async (id) => {
+        // Un mensaje de advertencia más limpio
+        if (!window.confirm('¿Estás seguro de eliminar esta categoría?')) return;
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/categories/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}` // Aseguramos el pase VIP
+                }
+            });
+
+            if (response.ok) {
+                alert('✅ Categoría eliminada correctamente.');
+                fetchCategories(); // Refrescamos la tabla automáticamente
+            } else if (response.status === 409) {
+                // ¡AQUÍ ATRAPAMOS EL ERROR DE LA BASE DE DATOS!
+                const errorMessage = await response.text();
+                alert(`❌ No se puede eliminar: ${errorMessage}`);
+            } else {
+                alert(`❌ Error al eliminar la categoría. Código: ${response.status}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('❌ Error de conexión con el servidor.');
+        }
+    };
+
+    // --- RENDERIZADO ---
     return (
-        <div className="mt-4 mb-5 position-relative">
-
-            {/* ¡NUEVO! Modal de Confirmación Superpuesto */}
-            {showModal && (
-                <div className="modal-backdrop bg-dark bg-opacity-50 d-flex justify-content-center align-items-center position-fixed top-0 start-0 w-100 h-100" style={{ zIndex: 1050 }}>
-                    <div className="card shadow-lg border-0 p-4" style={{ maxWidth: '400px' }}>
-                        <h5 className="fw-bold text-danger mb-3">⚠️ Confirmar Eliminación</h5>
-                        <p>
-                            Estás a punto de eliminar la categoría <strong>"{categoryToDelete?.title}"</strong>.
-                        </p>
-                        <p className="small text-muted mb-4">
-                            Consecuencia: Esta acción es irreversible y podría eliminar todos los vehículos asociados a esta categoría en la base de datos.
-                        </p>
-                        <div className="d-flex justify-content-end gap-2">
-                            <button className="btn btn-outline-secondary" onClick={() => setShowModal(false)}>
-                                Cancelar
-                            </button>
-                            <button className="btn btn-danger" onClick={confirmDelete}>
-                                Confirmar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Cabecera y Mensajes */}
+        <div className="mt-4 mb-5 container">
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="fw-bold mb-0">Gestión de Categorías</h2>
-                <Link to="/admin" className="btn btn-outline-dark">Volver a Vehículos</Link>
+                <Link to="/admin" className="btn btn-outline-dark fw-semibold">
+                    Volver a Vehículos
+                </Link>
             </div>
 
-            {message.text && <div className={`alert alert-${message.type} py-2`}>{message.text}</div>}
-
             <div className="row">
-                {/* Formulario (Mismo de antes) */}
-                <div className="col-lg-4 mb-4">
+                {/* FORMULARIO */}
+                <div className="col-lg-4 mb-4 mb-lg-0">
                     <div className="card shadow-sm border-0 p-4 sticky-top" style={{ top: '100px' }}>
-                        <h4 className="mb-3">Agregar Categoría</h4>
+                        <h4 className="mb-3">
+                            {editingCategoryId ? '✏️ Editar Categoría' : 'Agregar Categoría'}
+                        </h4>
+
                         <form onSubmit={handleSubmit}>
                             <div className="mb-3">
                                 <label className="form-label fw-semibold small">Título</label>
                                 <input type="text" className="form-control form-control-sm" name="title" value={formData.title} onChange={handleChange} required />
                             </div>
+
                             <div className="mb-3">
                                 <label className="form-label fw-semibold small">URL Imagen</label>
                                 <input type="url" className="form-control form-control-sm" name="imageUrl" value={formData.imageUrl} onChange={handleChange} required />
                             </div>
-                            <div className="mb-4">
+
+                            <div className="mb-3">
                                 <label className="form-label fw-semibold small">Descripción</label>
                                 <textarea className="form-control form-control-sm" name="description" value={formData.description} onChange={handleChange} rows="3" required></textarea>
                             </div>
-                            <button type="submit" className="btn w-100 fw-bold" style={{ backgroundColor: '#e3b155', color: '#fff' }} disabled={loading}>
-                                Guardar Categoría
-                            </button>
+
+                            <div className="d-grid gap-2 mt-4">
+                                <button type="submit" className="btn fw-bold" style={{ backgroundColor: '#e3b155', color: '#fff' }}>
+                                    {editingCategoryId ? 'Actualizar Categoría' : 'Guardar Categoría'}
+                                </button>
+
+                                {editingCategoryId && (
+                                    <button type="button" className="btn btn-outline-secondary fw-bold" onClick={cancelEdit}>
+                                        Cancelar Edición
+                                    </button>
+                                )}
+                            </div>
                         </form>
                     </div>
                 </div>
 
-                {/* Lista de Categorías */}
+                {/* TABLA DE CATEGORÍAS */}
                 <div className="col-lg-8">
-                    <div className="card shadow-sm border-0 p-4 h-100">
-                        <h4 className="mb-3">Categorías Existentes</h4>
+                    <div className="card shadow-sm border-0 p-4 mb-4">
+                        <h4 className="mb-3">Categorías Actuales</h4>
+
                         {categories.length === 0 ? (
                             <div className="alert alert-secondary text-center">No hay categorías registradas.</div>
                         ) : (
-                            <div className="row row-cols-1 row-cols-md-2 g-3">
-                                {categories.map((cat) => (
-                                    <div className="col" key={cat.id}>
-                                        <div className="card h-100 border-0 shadow-sm text-center p-3 position-relative">
-
-                                            {/* ¡NUEVO! Botón de eliminar en la esquina */}
-                                            <button
-                                                className="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2"
-                                                onClick={() => triggerDelete(cat)}
-                                                title="Eliminar categoría"
-                                            >
-                                                X
-                                            </button>
-
-                                            <img src={cat.imageUrl} alt={cat.title} className="mx-auto rounded-circle mb-2" style={{ width: '80px', height: '80px', objectFit: 'cover' }} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=600&q=80'; }} />
-                                            <h5 className="fw-bold">{cat.title}</h5>
-                                            <p className="small text-muted mb-0">{cat.description}</p>
-                                        </div>
-                                    </div>
-                                ))}
+                            <div className="table-responsive">
+                                <table className="table table-hover align-middle">
+                                    <thead className="table-light">
+                                        <tr>
+                                            <th>Imagen</th>
+                                            <th>Título</th>
+                                            <th>Descripción</th>
+                                            <th className="text-end">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {categories.map((cat) => (
+                                            <tr key={cat.id}>
+                                                <td>
+                                                    <img src={cat.imageUrl} alt={cat.title} className="rounded" style={{ width: '50px', height: '50px', objectFit: 'cover' }} onError={(e) => { e.target.src = 'https://via.placeholder.com/50'; }} />
+                                                </td>
+                                                <td className="fw-semibold small">{cat.title}</td>
+                                                <td className="small text-truncate" style={{ maxWidth: '200px' }}>{cat.description}</td>
+                                                <td className="text-end">
+                                                    <button
+                                                        className="btn btn-sm btn-outline-primary me-2"
+                                                        onClick={() => handleEditClick(cat)}
+                                                    >
+                                                        Editar
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-sm btn-outline-danger"
+                                                        onClick={() => handleDelete(cat.id)}
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         )}
                     </div>

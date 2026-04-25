@@ -29,39 +29,41 @@ const VehicleDetail = () => {
     const [startDate, endDate] = dateRange;
 
     useEffect(() => {
-        const fetchDatos = async () => {
+        const fetchVehicleData = async () => {
             try {
-                // 1. Datos del auto
-                const vRes = await fetch(`http://localhost:8080/api/vehicles/${id}`);
-                if (!vRes.ok) throw new Error("Vehículo no encontrado");
-                setVehicle(await vRes.json());
+                const res = await fetch(`http://localhost:8080/api/vehicles/${id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setVehicle(data);
 
-                // 2. Reservas (para el calendario)
-                const rRes = await fetch(`http://localhost:8080/api/reservations/vehicle/${id}`);
-                if (rRes.ok) {
-                    const reservas = await rRes.json();
-                    let fechasOcupadas = [];
-                    reservas.forEach(reserva => {
-                        const start = parseISO(reserva.startDate);
-                        const end = parseISO(reserva.endDate);
-                        fechasOcupadas = [...fechasOcupadas, ...eachDayOfInterval({ start, end })];
-                    });
-                    setBlockedDates(fechasOcupadas);
+                    // 1. Guardamos las reseñas
+                    if (data.reviews) {
+                        setReviews(data.reviews);
+                    }
+
+                    // 2. ¡RESTAURAMOS EL BLOQUEO DE FECHAS!
+                    if (data.reservations && data.reservations.length > 0) {
+                        let datesToBlock = [];
+                        data.reservations.forEach(res => {
+                            // Cambia startDate/endDate por checkIn/checkOut si así las enviaste desde Java
+                            const start = parseISO(res.startDate);
+                            const end = parseISO(res.endDate);
+
+                            // eachDayOfInterval saca todos los días intermedios entre las dos fechas
+                            const interval = eachDayOfInterval({ start, end });
+                            datesToBlock = [...datesToBlock, ...interval];
+                        });
+                        setBlockedDates(datesToBlock);
+                    }
                 }
-
-                // ¡NUEVO! 3. Traer las reseñas del auto
-                const revRes = await fetch(`http://localhost:8080/api/reviews/vehicle/${id}`);
-                if (revRes.ok) {
-                    setReviews(await revRes.json());
-                }
-
             } catch (error) {
-                console.error(error);
+                console.error("Error de conexión:", error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchDatos();
+
+        fetchVehicleData();
     }, [id]);
 
     // ¡NUEVO! Función para enviar una reseña
@@ -139,7 +141,37 @@ const VehicleDetail = () => {
 
                     {/* Tarjeta Principal del Vehículo */}
                     <div className="card border-0 shadow-sm overflow-hidden mb-4">
-                        <img src={vehicle.imageUrl} alt={vehicle.name} style={{ width: '100%', height: '400px', objectFit: 'cover' }} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80'; }} />
+
+                        <div id={`carousel-${vehicle.id}`} className="carousel slide shadow-sm rounded overflow-hidden" data-bs-ride="carousel">
+                            <div className="carousel-inner">
+
+                                {/* 1. Mostramos la imagen principal primero */}
+                                <div className="carousel-item active">
+                                    <img src={vehicle.imageUrl} className="d-block w-100" alt="Principal" style={{ height: '400px', objectFit: 'cover' }} />
+                                </div>
+
+                                {/* 2. Mostramos el resto de la galería si existe */}
+                                {vehicle.gallery && vehicle.gallery.map((imgUrl, index) => (
+                                    <div className="carousel-item" key={index}>
+                                        <img src={imgUrl} className="d-block w-100" alt={`Galería ${index}`} style={{ height: '400px', objectFit: 'cover' }} />
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Controles solo si hay más de 1 imagen (Principal + Galería) */}
+                            {(vehicle.gallery && vehicle.gallery.length > 0) && (
+                                <>
+                                    <button className="carousel-control-prev" type="button" data-bs-target={`#carousel-${vehicle.id}`} data-bs-slide="prev">
+                                        <span className="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+                                        <span className="visually-hidden">Anterior</span>
+                                    </button>
+                                    <button className="carousel-control-next" type="button" data-bs-target={`#carousel-${vehicle.id}`} data-bs-slide="next">
+                                        <span className="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+                                        <span className="visually-hidden">Siguiente</span>
+                                    </button>
+                                </>
+                            )}
+                        </div>
                         <div className="card-body p-4">
                             <div className="d-flex justify-content-between align-items-start mb-2">
                                 <div>
@@ -209,22 +241,33 @@ const VehicleDetail = () => {
                             <div className="alert alert-secondary mb-4">Inicia sesión para dejar una reseña.</div>
                         )}
 
-                        {/* Lista de Reseñas */}
-                        {reviews.length === 0 ? (
-                            <p className="text-muted text-center my-4">Aún no hay valoraciones. ¡Sé el primero en opinar!</p>
-                        ) : (
-                            <div className="d-flex flex-column gap-3">
-                                {reviews.map((rev, index) => (
-                                    <div key={index} className="border-bottom pb-3">
-                                        <div className="d-flex justify-content-between align-items-center mb-1">
-                                            <strong className="text-dark">{rev.user?.firstName} {rev.user?.lastName}</strong>
-                                            <span className="text-warning">{'★'.repeat(rev.rating)}{'☆'.repeat(5 - rev.rating)}</span>
+                        {/* --- LISTA DE RESEÑAS --- */}
+                        <div className="mt-4">
+                            <h4 className="fw-bold mb-3">Reseñas</h4>
+                            {reviews.length === 0 ? (
+                                <p className="text-muted">Aún no hay reseñas para este vehículo. ¡Sé el primero en opinar!</p>
+                            ) : (
+                                reviews.map((review, index) => (
+                                    <div key={review.id || index} className="card border-0 shadow-sm mb-3">
+                                        <div className="card-body">
+                                            <div className="d-flex justify-content-between align-items-center mb-2">
+                                                {/* Usamos userName tal como viene del backend */}
+                                                <h6 className="fw-bold mb-0">{review.userName || 'Usuario Anónimo'}</h6>
+
+                                                {/* Dibujamos las estrellas según el rating */}
+                                                <div className="text-warning">
+                                                    {[...Array(5)].map((star, i) => (
+                                                        <i key={i} className={`bi bi-star${i < review.rating ? '-fill' : ''}`}></i>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            {/* Usamos comment tal como viene del backend */}
+                                            <p className="small mb-0">{review.comment}</p>
                                         </div>
-                                        <p className="text-muted small mb-0">{rev.comment}</p>
                                     </div>
-                                ))}
-                            </div>
-                        )}
+                                ))
+                            )}
+                        </div>
                     </div>
 
                 </div>

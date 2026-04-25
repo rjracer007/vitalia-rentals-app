@@ -7,6 +7,7 @@ const Header = () => {
     // Leemos si hay un usuario logueado en el navegador
     const userName = localStorage.getItem('userName');
     const token = localStorage.getItem('jwt');
+    const role = localStorage.getItem('role');
 
     // Función para cerrar sesión
     const handleLogout = () => {
@@ -41,9 +42,11 @@ const Header = () => {
                         {token && userName ? (
                             // Vista de Usuario Logueado
                             <div className="d-flex align-items-center gap-3">
-                                {/* Opcional: Enlace al Admin temporal */}
-                                <Link to="/admin" className="text-decoration-none fw-semibold text-muted small">Panel Admin</Link>
-
+                                {role === 'ADMIN' && (
+                                    <Link to="/admin" className="btn btn-outline-primary btn-sm rounded-pill px-3">
+                                        Panel de Admin
+                                    </Link>
+                                )}
                                 <div className="d-flex align-items-center border-start ps-3">
                                     <div
                                         className="rounded-circle text-white d-flex justify-content-center align-items-center fw-bold me-2"
@@ -59,6 +62,9 @@ const Header = () => {
                                     {/* ¡NUEVO BOTÓN! */}
                                     <Link to="/mis-reservas" className="btn btn-outline-dark btn-sm rounded-pill px-3">
                                         Mis Reservas
+                                    </Link>
+                                    <Link to="/mis-favoritos" className="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                        Favoritos ❤️
                                     </Link>
 
                                     <button onClick={handleLogout} className="btn btn-sm btn-outline-danger fw-semibold">

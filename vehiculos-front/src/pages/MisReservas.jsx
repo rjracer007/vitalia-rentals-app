@@ -42,7 +42,15 @@ const MisReservas = () => {
         fetchReservations();
     }, [userId, token, navigate]);
 
-    const formatearFecha = (fechaIso) => new Date(fechaIso).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    const formatearFecha = (fechaString) => {
+
+        const fechaLimpia = fechaString.split('T')[0];
+        return new Date(`${fechaLimpia}T12:00:00`).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
 
     if (loading) return <div className="text-center mt-5"><div className="spinner-border text-warning"></div></div>;
 

@@ -30,9 +30,12 @@ const Login = () => {
 
                 // ¡LA MAGIA SUCEDE AQUÍ!
                 // Guardamos el token y el nombre en el "Almacenamiento Local" del navegador
-                localStorage.setItem('jwt', data.token);
-                localStorage.setItem('userName', data.name);
+                localStorage.setItem('jwt', data.jwt);
                 localStorage.setItem('userId', data.userId);
+                localStorage.setItem('role', data.role || 'USER');
+
+                const finalName = data.userName || data.firstName || data.email?.split('@')[0] || "Usuario";
+                localStorage.setItem('userName', finalName);
 
                 // Redirigimos al usuario al Home y recargamos para que el Header se actualice
                 window.location.href = '/';

@@ -25,12 +25,17 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
+
     // ¡NUEVO! Relación Muchos a Muchos para los Favoritos
     @ManyToMany
     @JoinTable(name = "user_favorites", // Nombre de la tabla intermedia que creará Postgres
             joinColumns = @JoinColumn(name = "user_id"), // Llave del usuario
             inverseJoinColumns = @JoinColumn(name = "vehicle_id") // Llave del vehículo
     )
+
     private Set<Vehicle> favoriteVehicles = new HashSet<>();
 
     // Constructores
@@ -91,5 +96,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 }

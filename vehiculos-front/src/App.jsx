@@ -13,6 +13,7 @@ import VehicleDetail from './pages/VehicleDetail';
 import Checkout from './pages/Checkout';
 import ReservationSuccess from './pages/ReservationSuccess';
 import MisReservas from './pages/MisReservas';
+import MisFavoritos from './pages/MisFavoritos';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
             <Route path="/checkout/:id" element={<Checkout />} />
             <Route path="/reserva-exitosa" element={<ReservationSuccess />} />
             <Route path="/mis-reservas" element={<MisReservas />} />
+            <Route path="/mis-favoritos" element={<MisFavoritos />} />
           </Routes>
         </main>
 

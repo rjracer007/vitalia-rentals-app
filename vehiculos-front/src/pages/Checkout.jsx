@@ -28,7 +28,14 @@ const Checkout = () => {
     }
 
     // Formateamos las fechas para que se vean bonitas
-    const formatearFecha = (fechaIso) => new Date(fechaIso).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const formatearFecha = (fechaString) => {
+        const fechaLimpia = fechaString.split('T')[0];
+        return new Date(`${fechaLimpia}T12:00:00`).toLocaleDateString('es-ES', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+    };
 
     // Función para confirmar y guardar en la base de datos
     const handleConfirmReservation = async () => {
