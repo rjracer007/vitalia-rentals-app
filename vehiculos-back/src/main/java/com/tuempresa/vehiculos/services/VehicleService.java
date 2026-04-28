@@ -65,7 +65,7 @@ public class VehicleService {
     }
 
     // --- MAPPER: Convierte la Entidad a un DTO limpio para React ---
-    private VehicleDTO convertToDTO(Vehicle vehicle) {
+    public VehicleDTO convertToDTO(Vehicle vehicle) {
         VehicleDTO dto = new VehicleDTO();
         dto.setId(vehicle.getId());
         dto.setName(vehicle.getName());
@@ -129,5 +129,17 @@ public class VehicleService {
         }
 
         return dto;
+    }
+
+    // ¡NUEVO! Método para procesar la búsqueda
+    public List<VehicleDTO> searchAvailableVehicles(java.time.LocalDate startDate, java.time.LocalDate endDate,
+            String keyword) {
+        // Asegurarnos de que el keyword nunca sea nulo para que el SQL no falle
+        String searchKeyword = (keyword == null) ? "" : keyword;
+
+        return vehicleRepository.findAvailableVehicles(startDate, endDate, searchKeyword)
+                .stream()
+                .map(this::convertToDTO) // Usamos el convertidor que ya tienes
+                .collect(java.util.stream.Collectors.toList());
     }
 }

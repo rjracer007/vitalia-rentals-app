@@ -188,6 +188,20 @@ const VehicleDetail = () => {
                             <h4 className="text-warning fw-bold mb-4">${vehicle.pricePerDay} <span className="text-muted fs-6 fw-normal">/día</span></h4>
                             <h5 className="fw-bold mt-4">Descripción</h5>
                             <p className="text-muted">{vehicle.description}</p>
+                            {/* ¡NUEVO! SECCIÓN DE CARACTERÍSTICAS */}
+                            {vehicle.features && vehicle.features.length > 0 && (
+                                <div className="mt-4 border-top pt-4">
+                                    <h5 className="fw-bold mb-3">Características del Vehículo</h5>
+                                    <div className="d-flex flex-wrap gap-2">
+                                        {vehicle.features.map(feature => (
+                                            <span key={feature.id} className="badge bg-light text-dark border p-2 px-3 fs-6 d-flex align-items-center gap-2">
+                                                {feature.icon && <i className={feature.icon} style={{ color: '#e3b155' }}></i>}
+                                                {feature.name}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
 

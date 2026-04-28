@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 import WhatsAppButton from './components/common/WhatsAppButton';
+import AdminRoute from './components/common/AdminRoute';
 
-// Importamos las páginas
 import Admin from './pages/Admin';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -22,19 +22,36 @@ function App() {
         <Header />
 
         <main className="container pt-5 mt-4 flex-grow-1">
-          {/* El componente Routes decide qué mostrar según la URL */}
           <Routes>
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/categories" element={<AdminCategories />} />
-            <Route path="/admin" element={<Admin />} />
+            {/* --- RUTAS PÚBLICAS --- */}
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/vehicle/:id" element={<VehicleDetail />} />
+
+            {/* --- RUTAS DE USUARIO (Si quisieras, podrías crear un <UserRoute> para estas) --- */}
             <Route path="/checkout/:id" element={<Checkout />} />
             <Route path="/reserva-exitosa" element={<ReservationSuccess />} />
             <Route path="/mis-reservas" element={<MisReservas />} />
             <Route path="/mis-favoritos" element={<MisFavoritos />} />
+
+            {/* --- RUTAS PROTEGIDAS (Solo ADMIN) --- */}
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <Admin />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/categories"
+              element={
+                <AdminRoute>
+                  <AdminCategories />
+                </AdminRoute>
+              }
+            />
           </Routes>
         </main>
 

@@ -1,0 +1,304 @@
+{
+  "info": {
+    "_postman_id": "60282255-a2fe-48ff-89bc-02555ec6071c",
+    "name": "Testing Proyecto Final - API Vehículos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54311187",
+    "_collection_link": "https://go.postman.co/collection/54311187-60282255-a2fe-48ff-89bc-02555ec6071c?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Registrar Usuario",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"firstName\": \"Juan\", \"lastName\": \"Perez\", \"email\": \"juan@test.com\", \"password\": \"password123\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/auth/register",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Iniciar Sesión (ADMIN)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();\r",
+              "pm.environment.set(\"jwt_token\", jsonData.jwt);"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"email\": \"rjracer007@gmail.com\", \"password\": \"2009medellin\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Vehículos",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/vehicles",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "vehicles"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar Vehículos",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/vehicles/search?startDate=2026-05-01&endDate=2026-05-10&keyword=SUV",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "vehicles",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2026-05-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2026-05-10"
+            },
+            {
+              "key": "keyword",
+              "value": "SUV"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Crear Reserva",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyanJhY2VyMDA3QGdtYWlsLmNvbSIsImlhdCI6MTc3NzQxNjA2OSwiZXhwIjoxNzc3NTAyNDY5fQ.7aUSSYaKeMpMkOmbh7X2nqLn-TwuHrVT1vLC-FXfMuM",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"startDate\": \"2026-05-01\", \"endDate\": \"2026-05-03\", \"vehicleId\": 6, \"userId\": 5 }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/reservations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "reservations"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Agregar a Favoritos",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyanJhY2VyMDA3QGdtYWlsLmNvbSIsImlhdCI6MTc3NzQxNjA2OSwiZXhwIjoxNzc3NTAyNDY5fQ.7aUSSYaKeMpMkOmbh7X2nqLn-TwuHrVT1vLC-FXfMuM",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/users/5/favorites/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "users",
+            "5",
+            "favorites",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Dejar Reseña",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJyanJhY2VyMDA3QGdtYWlsLmNvbSIsImlhdCI6MTc3NzQxNjA2OSwiZXhwIjoxNzc3NTAyNDY5fQ.7aUSSYaKeMpMkOmbh7X2nqLn-TwuHrVT1vLC-FXfMuM",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"rating\": 5, \"comment\": \"Excelente vehículo\" }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/reviews/user/5/vehicle/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "reviews",
+            "user",
+            "5",
+            "vehicle",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

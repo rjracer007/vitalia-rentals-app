@@ -7,6 +7,9 @@ const AdminCategories = () => {
     const [formData, setFormData] = useState({ title: '', description: '', imageUrl: '' });
     const [editingCategoryId, setEditingCategoryId] = useState(null);
 
+    // ¡NUEVO! Estado para los errores
+    const [formErrors, setFormErrors] = useState({});
+
     // ¡CRÍTICO! Necesitamos el token para poder crear/editar/borrar
     const token = localStorage.getItem('jwt');
 
@@ -18,6 +21,32 @@ const AdminCategories = () => {
         } catch (error) {
             console.error("Error cargando categorías", error);
         }
+    };
+
+    // --- FUNCIÓN DE VALIDACIÓN ---
+    const validateForm = () => {
+        const errors = {};
+
+        // Validar Título: No vacío y mínimo 3 letras
+        if (!formData.title.trim() || formData.title.length < 3) {
+            errors.title = "El título es obligatorio y debe tener al menos 3 caracteres.";
+        }
+
+        // Validar URL de Imagen: Formato básico de URL
+        const urlPattern = /^(http|https):\/\/[^ "]+$/;
+        if (!formData.imageUrl.trim()) {
+            errors.imageUrl = "La URL de la imagen es obligatoria.";
+        } else if (!urlPattern.test(formData.imageUrl)) {
+            errors.imageUrl = "Debe ser una URL válida que inicie con http:// o https://";
+        }
+
+        // Validar Descripción: Mínimo 10 caracteres
+        if (!formData.description.trim() || formData.description.length < 10) {
+            errors.description = "La descripción debe tener al menos 10 caracteres.";
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
     useEffect(() => {
@@ -42,11 +71,16 @@ const AdminCategories = () => {
     const cancelEdit = () => {
         setEditingCategoryId(null);
         setFormData({ title: '', description: '', imageUrl: '' });
+        setFormErrors({}); // ¡NUEVO! Limpiamos los errores al cancelar
     };
 
     // --- ACCIONES PRINCIPALES (CRUD) ---
     const handleSubmit = async (e) => {
         e.preventDefault();
+        // ¡BARRERA DE SEGURIDAD!
+        if (!validateForm()) {
+            return; // Si hay errores, detenemos el envío. Los mensajes rojos ya le avisarán al usuario.
+        }
 
         const url = editingCategoryId
             ? `http://localhost:8080/api/categories/${editingCategoryId}`
@@ -122,20 +156,41 @@ const AdminCategories = () => {
                             {editingCategoryId ? '✏️ Editar Categoría' : 'Agregar Categoría'}
                         </h4>
 
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmit} noValidate>
                             <div className="mb-3">
                                 <label className="form-label fw-semibold small">Título</label>
-                                <input type="text" className="form-control form-control-sm" name="title" value={formData.title} onChange={handleChange} required />
+                                <input
+                                    type="text"
+                                    className={`form-control form-control-sm ${formErrors.title ? 'is-invalid' : ''}`}
+                                    name="title"
+                                    value={formData.title}
+                                    onChange={handleChange}
+                                />
+                                {formErrors.title && <div className="invalid-feedback">{formErrors.title}</div>}
                             </div>
 
                             <div className="mb-3">
                                 <label className="form-label fw-semibold small">URL Imagen</label>
-                                <input type="url" className="form-control form-control-sm" name="imageUrl" value={formData.imageUrl} onChange={handleChange} required />
+                                <input
+                                    type="url"
+                                    className={`form-control form-control-sm ${formErrors.imageUrl ? 'is-invalid' : ''}`}
+                                    name="imageUrl"
+                                    value={formData.imageUrl}
+                                    onChange={handleChange}
+                                />
+                                {formErrors.imageUrl && <div className="invalid-feedback">{formErrors.imageUrl}</div>}
                             </div>
 
                             <div className="mb-3">
                                 <label className="form-label fw-semibold small">Descripción</label>
-                                <textarea className="form-control form-control-sm" name="description" value={formData.description} onChange={handleChange} rows="3" required></textarea>
+                                <textarea
+                                    className={`form-control form-control-sm ${formErrors.description ? 'is-invalid' : ''}`}
+                                    name="description"
+                                    value={formData.description}
+                                    onChange={handleChange}
+                                    rows="3"
+                                ></textarea>
+                                {formErrors.description && <div className="invalid-feedback">{formErrors.description}</div>}
                             </div>
 
                             <div className="d-grid gap-2 mt-4">

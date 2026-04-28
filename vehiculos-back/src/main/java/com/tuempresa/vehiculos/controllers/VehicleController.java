@@ -4,9 +4,11 @@ import com.tuempresa.vehiculos.dtos.VehicleDTO;
 import com.tuempresa.vehiculos.models.Vehicle;
 import com.tuempresa.vehiculos.services.VehicleService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -21,6 +23,17 @@ public class VehicleController {
     @GetMapping
     public ResponseEntity<List<VehicleDTO>> getAllVehicles() {
         return ResponseEntity.ok(vehicleService.getAllVehicles());
+    }
+
+    // ¡EL NUEVO ENDPOINT DE BÚSQUEDA!
+    // Lo ponemos ARRIBA del {id} para evitar choques
+    @GetMapping("/search")
+    public ResponseEntity<List<VehicleDTO>> searchVehicles(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "") String keyword) {
+
+        return ResponseEntity.ok(vehicleService.searchAvailableVehicles(startDate, endDate, keyword));
     }
 
     @GetMapping("/{id}")

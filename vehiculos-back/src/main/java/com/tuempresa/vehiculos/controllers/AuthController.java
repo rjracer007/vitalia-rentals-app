@@ -4,13 +4,17 @@ import com.tuempresa.vehiculos.models.Role;
 import com.tuempresa.vehiculos.models.User;
 import com.tuempresa.vehiculos.repositories.RoleRepository;
 import com.tuempresa.vehiculos.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import com.tuempresa.vehiculos.security.JwtUtil;
 
-// IMPORTANTE: Si usas clases como AuthenticationManager, PasswordEncoder o JwtUtil,
-// asegúrate de que sus importaciones ("import ...") estén aquí arriba.
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,17 +32,16 @@ public class AuthController {
     private RoleRepository roleRepository;
 
     // ==========================================================
-    // AQUI INYECTA TUS UTILIDADES DE SEGURIDAD (Descomenta y ajusta)
+    // ¡MOTORES DE SEGURIDAD ACTIVADOS!
     // ==========================================================
-    // @Autowired
-    // private AuthenticationManager authenticationManager;
-
-    // @Autowired
-    // private PasswordEncoder passwordEncoder;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    private JwtUtil jwtUtil; // O JwtService, según cómo lo hayas llamado
-    // ==========================================================
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     /**
      * ENDPOINT DE REGISTRO
@@ -56,16 +59,18 @@ public class AuthController {
         if (defaultRole.isPresent()) {
             userRequest.setRole(defaultRole.get());
         } else {
-            return ResponseEntity.internalServerError().body("Error crítico: Rol 'USER' no encontrado en el sistema.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error crítico: Rol 'USER' no encontrado en el sistema. Verifica tu RoleSeeder.");
         }
 
-        // 3. Encriptar la contraseña (Si ya usabas PasswordEncoder, descomenta esto)
-        // String encodedPassword = passwordEncoder.encode(userRequest.getPassword());
-        // userRequest.setPassword(encodedPassword);
+        // 3. ¡MAGIA SENIOR! Encriptar la contraseña antes de guardar
+        String encodedPassword = passwordEncoder.encode(userRequest.getPassword());
+        userRequest.setPassword(encodedPassword);
 
-        // 4. Guardar usuario y devolverlo directamente (Esto elimina la advertencia
-        // amarilla)
-        return ResponseEntity.ok(userRepository.save(userRequest));
+        // 4. Guardar usuario en la base de datos
+        userRepository.save(userRequest);
+
+        return ResponseEntity.ok("Usuario registrado exitosamente");
     }
 
     /**
@@ -73,26 +78,22 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody User loginRequest) {
+        try {
+            // 1. Validar credenciales (Spring compara la clave que ingresas con la
+            // encriptada)
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()));
 
-        // ==========================================================
-        // 1. AUTENTICACIÓN Y GENERACIÓN DEL TOKEN
-        // Pega aquí tus líneas que validan la contraseña y generan el JWT.
-        // Ejemplo estándar:
-        // Authentication auth = authenticationManager.authenticate(
-        // new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),
-        // loginRequest.getPassword())
-        // );
-        // String token = jwtUtil.generateToken(auth.getName());
+            // 2. Si las credenciales son correctas, generamos el JWT
+            String token = jwtUtil.generateToken(authentication.getName());
 
-        String token = jwtUtil.generateToken(loginRequest.getEmail());
-        // 2. Buscar al usuario en la BD para obtener sus datos (Esto elimina el error
-        // rojo)
-        Optional<User> userOpt = userRepository.findByEmail(loginRequest.getEmail());
+            // 3. Buscar al usuario en la BD para obtener sus datos
+            User user = userRepository.findByEmail(loginRequest.getEmail())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        if (userOpt.isPresent()) {
-            User user = userOpt.get(); // Nace la variable "user"
-
-            // 3. Armar el JSON de respuesta para React
+            // 4. Armar el JSON de respuesta para React
             Map<String, Object> response = new HashMap<>();
             response.put("jwt", token);
             response.put("userId", user.getId());
@@ -102,13 +103,18 @@ public class AuthController {
             if (user.getRole() != null) {
                 response.put("role", user.getRole().getName());
             } else {
-                response.put("role", "USER"); // Respaldo por si hay usuarios viejos sin rol
+                response.put("role", "USER");
             }
 
             return ResponseEntity.ok(response);
 
-        } else {
-            return ResponseEntity.badRequest().body("Credenciales incorrectas o usuario no encontrado");
+        } catch (BadCredentialsException e) {
+            // ¡PROTECCIÓN! Si la clave está mal, entra aquí y devuelve 401
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Credenciales incorrectas o usuario no encontrado");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error en el servidor: " + e.getMessage());
         }
     }
 }

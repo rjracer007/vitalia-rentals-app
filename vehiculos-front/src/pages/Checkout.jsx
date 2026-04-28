@@ -43,15 +43,17 @@ const Checkout = () => {
         setError('');
 
         try {
-            const response = await fetch(`http://localhost:8080/api/reservations/user/${userId}/vehicle/${id}`, {
+            const response = await fetch(`http://localhost:8080/api/reservations`, { // <-- URL limpia
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    startDate: checkIn.split('T')[0], // Mandamos solo la fecha YYYY-MM-DD
-                    endDate: checkOut.split('T')[0]
+                    startDate: checkIn,
+                    endDate: checkOut,
+                    userId: userId,
+                    vehicleId: id
                 })
             });
 
